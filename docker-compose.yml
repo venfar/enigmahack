@@ -1,22 +1,36 @@
+version: '3.9'
+
 services:
-  db:
-    image: mysql:8.0
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
-    environment:
-      MYSQL_DATABASE: enigma_db
-      MYSQL_ROOT_PASSWORD: root
+  frontend:
+    build: ./frontend
     ports:
-      - "3306:3306"
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - general
 
   backend:
-    build: . 
-    ports:
-      - "8080:8080"
+    build: ./backend
     depends_on:
       - db
+    env_file:
+      - .env
+    networks:
+      - general
+    restart: always
+  
+  db:
+    image: mysql:8.0
     environment:
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASS=root
-      - DB_NAME=enigma_db
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - general
+    restart: always
+
+networks:
+  general:
+    driver: bridge
