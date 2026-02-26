@@ -10,7 +10,7 @@ COPY . .
 
 RUN rm -rf build/* && mkdir -p build && cd build && cmake .. && make -j$(nproc)
 
-FROM alpine:3
+FROM ubuntu:latest
 
 RUN apt-get update && apt-get install -y libssl3 libmysqlcppconn7v5 ca-certificates && rm -rf /var/lib/apt/lists/*
 
