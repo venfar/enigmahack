@@ -1,0 +1,22 @@
+services:
+  db:
+    image: mysql:8.0
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql 
+    environment:
+      MYSQL_DATABASE: enigma_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+
+  backend:
+    build: . 
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_USER=root
+      - DB_PASS=root
+      - DB_NAME=enigma_db
