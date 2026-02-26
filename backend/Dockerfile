@@ -18,7 +18,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/build/backend .
 
-COPY --from=builder /app/frontend ./frontend 
+# COPY --from=builder /app/frontend ./frontend 
 
 EXPOSE 8080
 
