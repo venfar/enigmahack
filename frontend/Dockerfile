@@ -12,7 +12,7 @@ RUN npm run build && ls -la
 
 FROM nginx:alpine
 
-RUN adduser -m appuser
+RUN adduser -D appuser
 
 COPY --from=builder --chown=appuser:appuser /app/dist /usr/share/nginx/html
 
