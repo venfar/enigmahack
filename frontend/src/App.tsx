@@ -1,6 +1,21 @@
-import './App.css'
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import './App.css';
+// import {data} from './mocks.ts';
 
 function App() {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    axios.get('https://jsonplaceholder.typicode.com/posts') 
+      .then(response => {
+        setData(response.data);
+      })
+      .catch(error => {
+        console.error('Ошибка при получении данных:', error);
+      });
+  }, []);
+
   return (
     <table>
       <thead>
@@ -17,6 +32,11 @@ function App() {
         </tr>
       </thead>
       <tbody>
+        {data.map((columnItem: object) => (
+          <tr>
+            {Object.values(columnItem).map((rowItem) => (<td>{rowItem}</td>))}
+          </tr>
+        ))}
         <tr>
           <td>
           </td>
@@ -42,4 +62,4 @@ function App() {
   )
 }
 
-export default App
+export default App;
