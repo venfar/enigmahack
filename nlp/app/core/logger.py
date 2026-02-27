@@ -11,6 +11,13 @@ def setup_logger():
         colorize=True
     )
     logger.add(
+        "logs/email_{time:YYYY-MM-DD}.log",
+        rotation="500 MB",
+        retention="7 days",
+        level="DEBUG",
+        format="{time} | {level} | {name}:{function}:{line} - {message}",
+    )
+    logger.add(
         "logs/sentiment_{time:YYYY-MM-DD}.log",
         rotation="500 MB",
         retention="7 days",
