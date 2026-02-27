@@ -15,10 +15,10 @@ CREATE TABLE request_history (
 );
 
 INSERT INTO users (username) VALUES 
-('ivan_pro'),
+('pro'),
 ('enigma_bot'),
-('cyber_student'),
-('guest_99');
+('student'),
+('user');
 
 INSERT INTO request_history (user_id, request_text, response_text, status) VALUES
 (1, 'Ubuntu', 'nginx', 'success'),
