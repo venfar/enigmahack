@@ -95,6 +95,10 @@ int main() {
         }
     });
 
+    server.Get("/health", [](const httplib::Request& req, httplib::Response& res) {
+        res.set_content("{\"status\":\"ok\"}", "application/json");
+    });
+
     std::cout << "Backend server started on http://0.0.0.0:8080" << std::endl;
     server.listen("0.0.0.0", 8080);
     return 0;
