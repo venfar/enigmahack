@@ -7,18 +7,25 @@
 #include <mysql_connection.h>
 #include <cppconn/prepared_statement.h>
 #include <cppconn/exception.h>
+#include <cppconn/statement.h>
 
 using json = nlohmann::json;
 
+std::unique_ptr<sql::Connection> connect_db() {
+    sql::mysql::MySQL_Driver *driver = sql::mysql::get_mysql_driver_instance();
+    std::unique_ptr<sql::Connection> con(driver->connect("tcp://db:3306", "root", "root"));
+    con->setSchema("enigma_db");
+    
+    std::unique_ptr<sql::Statement> stmt(con->createStatement());
+    stmt->execute("SET NAMES utf8mb4");
+    
+    return con;
+}
+
 void log_ticket_to_db(const std::string& subject, const std::string& body, const std::string& sentiment) {
     try {
-        sql::mysql::MySQL_Driver *driver;
-        std::unique_ptr<sql::Connection> con;
+        auto con = connect_db();
         std::unique_ptr<sql::PreparedStatement> pstmt;
-        
-        driver = sql::mysql::get_mysql_driver_instance();
-        con.reset(driver->connect("tcp://db:3306", "root", "root"));
-        con->setSchema("enigma_db");
         
         pstmt.reset(con->prepareStatement(
             "INSERT INTO ticket(subject, body, sentiment, facility_id, contact_id, status) VALUES (?, ?, ?, 1, 1, 'open')"
@@ -42,7 +49,7 @@ int main() {
     
     server.Get("/health", [](const httplib::Request& req, httplib::Response& res) {
         json health = {{"status", "ok"}};
-        res.set_content(health.dump(), "application/json");
+        res.set_content(health.dump(), "application/json; charset=utf-8");
     });
     
     server.Post("/api/v1/predict", [](const httplib::Request& req, httplib::Response& res) {
@@ -62,19 +69,16 @@ int main() {
             };
             
             res.set_header("Access-Control-Allow-Origin", "*");
-            res.set_content(output_status.dump(), "application/json");
+            res.set_content(output_status.dump(), "application/json; charset=utf-8");
         } catch (const std::exception& e) {
             res.status = 400;
-            res.set_content("{\"error\": \"Invalid JSON\"}", "application/json");
+            res.set_content("{\"error\": \"Invalid JSON\"}", "application/json; charset=utf-8");
         }
     });
     
     server.Get("/api", [](const httplib::Request& req, httplib::Response& res) {
         try {
-            sql::mysql::MySQL_Driver *driver = sql::mysql::get_mysql_driver_instance();
-            std::unique_ptr<sql::Connection> con(driver->connect("tcp://db:3306", "root", "root"));
-            con->setSchema("enigma_db");
-
+            auto con = connect_db();
             std::unique_ptr<sql::Statement> stmt(con->createStatement());
             
             std::unique_ptr<sql::ResultSet> res_db(stmt->executeQuery(
@@ -99,12 +103,12 @@ int main() {
             }
             
             res.set_header("Access-Control-Allow-Origin", "*");
-            res.set_content(response_data.dump(), "application/json");
+            res.set_content(response_data.dump(), "application/json; charset=utf-8");
             
         } catch (sql::SQLException &e) {
             std::cerr << "[API DB Error] " << e.what() << std::endl;
             res.status = 500;
-            res.set_content("{\"error\": \"Database connection error\"}", "application/json");
+            res.set_content("{\"error\": \"Database connection error\"}", "application/json; charset=utf-8");
         }
     });
 
