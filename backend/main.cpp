@@ -10,27 +10,26 @@
 
 using json = nlohmann::json;
 
-void log_to_mysql(const std::string& request_body, const std::string& status_msg) {
+void log_ticket_to_db(const std::string& subject, const std::string& body, const std::string& sentiment) {
     try {
         sql::mysql::MySQL_Driver *driver;
         std::unique_ptr<sql::Connection> con;
         std::unique_ptr<sql::PreparedStatement> pstmt;
         
         driver = sql::mysql::get_mysql_driver_instance();
-        
         con.reset(driver->connect("tcp://db:3306", "root", "root"));
         con->setSchema("enigma_db");
         
         pstmt.reset(con->prepareStatement(
-            "INSERT INTO request_history(user_id, request_text, status) VALUES (?, ?, ?)"
+            "INSERT INTO ticket(subject, body, sentiment, facility_id, contact_id, status) VALUES (?, ?, ?, 1, 1, 'open')"
         ));
         
-        pstmt->setInt(1, 2); 
-        pstmt->setString(2, request_body);
-        pstmt->setString(3, status_msg);
+        pstmt->setString(1, subject);
+        pstmt->setString(2, body);
+        pstmt->setString(3, sentiment);
         pstmt->execute();
         
-        std::cout << "[DB] Log saved successfully" << std::endl;
+        std::cout << "[DB] Ticket saved successfully" << std::endl;
     } catch (sql::SQLException &e) {
         std::cerr << "[DB Insert Error] " << e.what() << " (Code: " << e.getErrorCode() << ")" << std::endl;
     }
@@ -49,19 +48,22 @@ int main() {
     server.Post("/api/v1/predict", [](const httplib::Request& req, httplib::Response& res) {
         try {
             auto input_data = json::parse(req.body);
-            std::cout << "Received predict request" << std::endl;
+            std::string text = input_data.value("text", "No content");
             
-            log_to_mysql(req.body, "success");
+            std::cout << "Processing new ticket: " << text << std::endl;
+            
+            std::string detected_sentiment = "neutral"; 
+            log_ticket_to_db("API Request", text, detected_sentiment);
             
             json output_status = {
                 {"status", "success"},
-                {"prediction", "some_result"},
-                {"model-alpha", "1.0.0-alpha"}
+                {"sentiment", detected_sentiment},
+                {"model-version", "1.0.0-alpha"}
             };
             
+            res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(output_status.dump(), "application/json");
         } catch (const std::exception& e) {
-            log_to_mysql(req.body, "error");
             res.status = 400;
             res.set_content("{\"error\": \"Invalid JSON\"}", "application/json");
         }
@@ -74,9 +76,12 @@ int main() {
             con->setSchema("enigma_db");
 
             std::unique_ptr<sql::Statement> stmt(con->createStatement());
-
+            
             std::unique_ptr<sql::ResultSet> res_db(stmt->executeQuery(
-                "SELECT id, request_text, status FROM request_history ORDER BY id DESC LIMIT 10"
+                "SELECT t.id, t.subject, t.body, t.status, t.sentiment, f.name as facility_name "
+                "FROM ticket t "
+                "LEFT JOIN Facility f ON t.facility_id = f.id "
+                "ORDER BY t.id DESC LIMIT 20"
             ));
             
             json response_data = json::array();
@@ -84,8 +89,11 @@ int main() {
             while (res_db->next()) {
                 json item = {
                     {"id", res_db->getInt("id")},
-                    {"text", res_db->getString("request_text")},
-                    {"status", res_db->getString("status")}
+                    {"subject", res_db->getString("subject")},
+                    {"body", res_db->getString("body")},
+                    {"status", res_db->getString("status")},
+                    {"sentiment", res_db->getString("sentiment")},
+                    {"facility", res_db->getString("facility_name")}
                 };
                 response_data.push_back(item);
             }
