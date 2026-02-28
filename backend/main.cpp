@@ -10,8 +10,13 @@
 #include <cppconn/prepared_statement.h>
 #include <cppconn/exception.h>
 #include <cppconn/statement.h>
+#include <cppconn/resultset.h>
 
 using json = nlohmann::json;
+
+std::string getSafeString(std::unique_ptr<sql::ResultSet>& res, const std::string& column) {
+    return res->isNull(column) ? "" : res->getString(column);
+}
 
 std::unique_ptr<sql::Connection> connect_db() {
     sql::mysql::MySQL_Driver *driver = sql::mysql::get_mysql_driver_instance();
@@ -24,11 +29,11 @@ std::unique_ptr<sql::Connection> connect_db() {
             std::unique_ptr<sql::Statement> stmt(con->createStatement());
             stmt->execute("SET NAMES utf8mb4");
             
-            std::cout << "[DB] Успешное подключение!" << std::endl;
+            std::cout << "[DB] Connected successfully!" << std::endl;
             return con; 
         } catch (sql::SQLException &e) {
             attempts++;
-            std::cerr << "Ожидание базы (" << e.what() << "). Попытка " << attempts << "/20" << std::endl;
+            std::cerr << "DB Waiting... Attempt " << attempts << "/20" << std::endl;
             std::this_thread::sleep_for(std::chrono::seconds(3));
         }
     }
@@ -48,70 +53,49 @@ int main() {
             std::unique_ptr<sql::Statement> stmt(con->createStatement());
             
             std::string query = 
-                "SELECT t.id, t.email_id, t.subject, t.body, t.status, "
-                "t.sentiment, t.sentiment_confidence, "
-                "t.category_confidence, t.generated_response, "
-                "t.response_subject, t.response_method, "
-                "f.name as facility_name, "
-                "c.full_name as contact_name, c.email as contact_email, c.phone as contact_phone, "
-                "cat.name as category_name, "
-                "ga.serial_number as sn "
+                "SELECT t.id, t.email_id, t.body as question_body, t.status, "
+                "s.name as sentiment_label, "            
+                "gt.type as device_type, "              
+                "f.name as facility_name, "             
+                "c.full_name as contact_name, "         
+                "t.generated_response as ai_reply "     
                 "FROM ticket t "
+                "LEFT JOIN Sentiment s ON t.sentiment_id = s.id "
+                "LEFT JOIN Gas_analyzer ga ON t.gaz_analyzer_id = ga.id "
+                "LEFT JOIN Gas_analyzer_type gt ON ga.type_id = gt.id "
                 "LEFT JOIN Facility f ON t.facility_id = f.id "
                 "LEFT JOIN Contacts c ON t.contact_id = c.id "
-                "LEFT JOIN Categories cat ON t.category_id = cat.id "
-                "LEFT JOIN Gas_analyzer ga ON t.gaz_analyzer_id = ga.id "
-                "ORDER BY t.created_at DESC"; 
+                "ORDER BY t.id DESC"; 
 
             std::unique_ptr<sql::ResultSet> res_db(stmt->executeQuery(query));
             
             json response_data = json::array();
             while (res_db->next()) {
-                json item = {
+                json row = {
                     {"id", res_db->getInt("id")},
-                    {"email_id", res_db->getString("email_id")},
-                    {"subject", res_db->getString("subject")},     
-                    {"body", res_db->getString("body")},
-                    {"status", res_db->getString("status")},
-                    {"analysis", {
-                        {"sentiment", res_db->getString("sentiment")},
-                        {"sentiment_confidence", res_db->getDouble("sentiment_confidence")},
-                        {"category", res_db->getString("category_name")},
-                        {"category_confidence", res_db->getDouble("category_confidence")}
-                    }},
-                    {"meta", {
-                        {"facility", res_db->getString("facility_name")},
-                        {"contact_fio", res_db->getString("contact_name")},
-                        {"contact_email", res_db->getString("contact_email")},
-                        {"contact_phone", res_db->getString("contact_phone")},
-                        {"serial_number", res_db->getString("sn")}
-                    }},
-                    {"ai_response", {
-                        {"subject", res_db->getString("response_subject")},
-                        {"body", res_db->getString("generated_response")},
-                        {"method", res_db->getString("response_method")}
-                    }}
+                    {"email_id", getSafeString(res_db, "email_id")},
+                    {"issue", getSafeString(res_db, "question_body")},   
+                    {"sentiment", getSafeString(res_db, "sentiment_label")}, 
+                    {"device", getSafeString(res_db, "device_type")},    
+                    {"object", getSafeString(res_db, "facility_name")},
+                    {"fio", getSafeString(res_db, "contact_name")},
+                    {"status", getSafeString(res_db, "status")},
+                    {"answer", getSafeString(res_db, "ai_reply")}
                 };
-                response_data.push_back(item);
+                response_data.push_back(row);
             }
             
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(response_data.dump(), "application/json; charset=utf-8");
             
         } catch (const std::exception &e) {
-            std::cerr << "API Error: " << e.what() << std::endl;
+            std::cerr << "Error: " << e.what() << std::endl;
             res.status = 500;
-            res.set_content("{\"error\": \"Database error\", \"details\": \"" + std::string(e.what()) + "\"}", "application/json");
+            res.set_content("{\"error\": \"Database error\"}", "application/json");
         }
     });
 
-    server.Post("/api/v1/predict", [](const httplib::Request& req, httplib::Response& res) {
-        std::cout << "Received prediction data: " << req.body << std::endl;
-        res.set_header("Access-Control-Allow-Origin", "*");
-        res.set_content("{\"status\":\"success\"}", "application/json");
-    });
-
-    std::cout << "Backend server started on 0.0.0.0:8080" << std::endl;
+    std::cout << "Backend server started on http://0.0.0.0:8080" << std::endl;
     server.listen("0.0.0.0", 8080);
     return 0;
 }
