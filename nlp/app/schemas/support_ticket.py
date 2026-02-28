@@ -12,7 +12,7 @@ class ProcessedEmail(BaseModel):
     email: Optional[str] = None
     serial_numbers: List[str] = Field(default_factory=list)
     device_type: Optional[str] = None
-    summary: Optional[str] = None
+    description: Optional[str] = None
     sentiment: Optional[str] = None
     sentiment_confidence: Optional[float] = None
     category: Optional[str] = None

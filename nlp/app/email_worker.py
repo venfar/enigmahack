@@ -14,6 +14,7 @@ from app.models.classifier_model import Classifier
 from app.models.summarizer_model import SummarizerModel
 from app.services.parser import Parser
 from app.models.response_generator import ResponseGenerator
+from app.services.email_sender import EmailSender
 
 
 class EmailWorker:    
@@ -23,6 +24,9 @@ class EmailWorker:
         self.email_user = settings.email_user
         self.email_password = settings.email_password
         self.folder = settings.email_folder
+
+        self.smtp_server = settings.smtp_server
+        self.smtp_port = settings.smtp_port
         
         self.processed_file = settings.processed_file
         self.processed_ids = self._load_processed_ids()
@@ -34,6 +38,14 @@ class EmailWorker:
         self.parser = Parser()
         self.response_generator = ResponseGenerator()
         log.success("Все модели загружены")
+
+        self.sender = EmailSender(
+            smtp_host=self.smtp_server,
+            smtp_port=self.smtp_port,
+            login=settings.email_user,
+            password=self.email_password,
+            from_name="Техподдержка ЭРИС"
+        )   
     
     def _load_processed_ids(self) -> set:
         """Загрузка ID обработанных писем"""
@@ -184,7 +196,7 @@ class EmailWorker:
             'email': parser_result['emails'][0] if parser_result['emails'] else sender_email,
             'serial_numbers': parser_result['serial_numbers'],
             'device_type': parser_result['device_types'][0] if parser_result['device_types'] else None,
-            'summary': summarizer_result['summary'],
+            'description': summarizer_result['summary'],
             'sentiment': sentiment_result['sentiment'],
             'sentiment_confidence': sentiment_result['confidence'],
             'category': classifier_result['category'],
@@ -209,7 +221,17 @@ class EmailWorker:
         record['response_body'] = response['body']
         record['response_subject'] = response['subject']
         record['response_method'] = response['method']
-        
+
+        log.info("Отправка письма...")
+        success = self.sender.send(
+            to_email=record['email'],
+            subject=record['response_subject'],
+            text=record['response_body'],
+        )
+        if success:
+            log.info("Письмо отправлено")
+        else:
+            log.error("Ошибка отправки")
         return record
     
     def fetch_and_process(self, limit: int = 10) -> list:

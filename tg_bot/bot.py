@@ -21,9 +21,9 @@ def load_state():
             with open(STATE_FILE, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 sent_ids = set(data)
-                print(f"✅ Загружено {len(sent_ids)} ID отправленных тикетов")
+                print(f"Загружено {len(sent_ids)} ID отправленных тикетов")
         except Exception as e:
-            print(f"⚠️ Ошибка загрузки состояния: {e}")
+            print(f"Ошибка загрузки состояния: {e}")
             sent_ids = set()
     else:
         print("📂 Файл состояния не найден, создаём новый")
@@ -38,7 +38,7 @@ def save_state():
         with open(STATE_FILE, 'w', encoding='utf-8') as f:
             json.dump(list(sent_ids), f, ensure_ascii=False, indent=2)
     except Exception as e:
-        print(f"❌ Ошибка сохранения состояния: {e}")
+        print(f"Ошибка сохранения состояния: {e}")
 
 
 def format_ticket(ticket: dict) -> str:
@@ -69,6 +69,10 @@ def format_ticket(ticket: dict) -> str:
 📝 <b>Суть вопроса:</b> {ticket.get('description', 'Не указано')[:500]}
 
 ⏰ <b>Дата получения:</b> {ticket.get('date', 'Не указано')}
+
+📝 <b>Текст:</b> {ticket.get('text', 'Не указано')[:500]}
+
+📝 <b>Ответ модели:</b> {ticket.get('response_body', 'Не указано')[:500]}
 """
     return text
 
@@ -93,12 +97,12 @@ async def send_ticket(ticket: dict):
     """Отправка тикета в Telegram"""
     try:
         if ticket is None:
-            print("⚠️ Тикет равен None, пропускаем")
+            print("Тикет равен None, пропускаем")
             return False
         
         # Проверяем, что ticket - это словарь
         if not isinstance(ticket, dict):
-            print(f"⚠️ Тикет не является словарём: {type(ticket)}")
+            print(f"Тикет не является словарём: {type(ticket)}")
             return False
         
         ticket_id = ticket.get('email_id')
@@ -108,10 +112,10 @@ async def send_ticket(ticket: dict):
         
         message = format_ticket(ticket)
         await bot.send_message(ADMIN_ID, message, parse_mode='HTML')
-        print(f"✅ Отправлен тикет #{ticket_id}")
+        print(f"Отправлен тикет #{ticket_id}")
         return True
     except Exception as e:
-        print(f"❌ Ошибка отправки тикета: {e}")
+        print(f"Ошибка отправки тикета: {e}")
         return False
 
 
@@ -121,7 +125,7 @@ async def check_new_tickets():
         tickets = await fetch_tickets(session)
         
         if not tickets:
-            print("💤 Нет тикетов в API")
+            print("Нет тикетов в API")
             return 0
         
         new_count = 0
@@ -154,7 +158,7 @@ async def cmd_start(message: types.Message):
             parse_mode='HTML'
         )
     else:
-        await message.answer("❌ Доступ запрещён")
+        await message.answer("Доступ запрещён")
 
 
 @dp.message(Command("status"))
@@ -170,18 +174,18 @@ async def cmd_status(message: types.Message):
             parse_mode='HTML'
         )
     else:
-        await message.answer("❌ Доступ запрещён")
+        await message.answer("Доступ запрещён")
 
 
 @dp.message(Command("check"))
 async def cmd_check(message: types.Message):
     """Команда /check - ручная проверка"""
     if message.from_user.id == ADMIN_ID:
-        msg = await message.answer("🔍 Проверяю новые тикеты...")
+        msg = await message.answer("Проверяю новые тикеты...")
         count = await check_new_tickets()
-        await msg.edit_text(f"✅ Проверка завершена. Найдено новых тикетов: {count}")
+        await msg.edit_text(f"Проверка завершена. Найдено новых тикетов: {count}")
     else:
-        await message.answer("❌ Доступ запрещён")
+        await message.answer("Доступ запрещён")
 
 
 async def background_polling():
@@ -189,17 +193,17 @@ async def background_polling():
     while True:
         try:
             now = datetime.now().strftime('%H:%M:%S')
-            print(f"\n🔍 Опрос API... ({now})")
+            print(f"\n Опрос API... ({now})")
             
             count = await check_new_tickets()
             
             if count > 0:
-                print(f"🆕 Найдено {count} новых тикетов")
+                print(f"Найдено {count} новых тикетов")
             else:
-                print("✅ Нет новых тикетов")
+                print("Нет новых тикетов")
             
         except Exception as e:
-            print(f"❌ Ошибка в фоне: {e}")
+            print(f"Ошибка в фоне: {e}")
         
         await asyncio.sleep(POLL_INTERVAL)
 
@@ -207,12 +211,12 @@ async def background_polling():
 async def on_startup():
     """Инициализация при старте бота"""
     print("="*60)
-    print("🚀 ЗАПУСК TELEGRAM БОТА")
+    print("ЗАПУСК TELEGRAM БОТА")
     print("="*60)
-    print(f"👤 Admin ID: {ADMIN_ID}")
-    print(f"⏱ Poll Interval: {POLL_INTERVAL} сек")
-    print(f"🔗 API URL: {API_URL}")
-    print(f"📂 State File: {STATE_FILE}")
+    print(f"Admin ID: {ADMIN_ID}")
+    print(f"Poll Interval: {POLL_INTERVAL} сек")
+    print(f"API URL: {API_URL}")
+    print(f"State File: {STATE_FILE}")
     print("="*60)
     
     load_state()

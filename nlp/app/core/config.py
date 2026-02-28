@@ -8,6 +8,8 @@ class Settings(BaseSettings):
     email_password: str = Field("your_app_password")
     imap_server: str = Field("imap.yandex.ru")
     imap_port: int = Field(993)
+    smtp_server: str = Field("smtp.yandex.ru")
+    smtp_port: int = Field(587)
     email_folder: str = Field("INBOX")
 
     # === Модели ===
