@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+.DS_Store
+*.pyc
+.env
+venv/
+env/
+.vscode/
+.DS_Store
+logs/
+data/
+state/
+
+*.json
+
+test2.py
+test3.py

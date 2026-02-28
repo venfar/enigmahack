@@ -6,12 +6,13 @@ class ProcessedEmail(BaseModel):
     email_id: str
     date: Optional[str] = None
     fio: Optional[str] = None
+    text: Optional[str] = None
     object_name: Optional[str] = None
     phone: Optional[str] = None
     email: Optional[str] = None
     serial_numbers: List[str] = Field(default_factory=list)
     device_type: Optional[str] = None
-    description: Optional[str] = None
+    summary: Optional[str] = None
     sentiment: Optional[str] = None
     sentiment_confidence: Optional[float] = None
     category: Optional[str] = None

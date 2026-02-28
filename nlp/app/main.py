@@ -4,14 +4,25 @@ from contextlib import asynccontextmanager
 from app.core.config import settings
 from app.core.logger import log
 from app.api.routes import router
+import os
+import json
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Инициализация при старте"""
     log.info("Запуск API сервера...")
     log.info(f"Host: {settings.host}:{settings.port}")
+    init_records_file()
     yield
     log.info("Завершение работы API сервера")
+
+def init_records_file():
+    """Инициализация файла записей, если он не существует"""
+    if not os.path.exists(settings.records_file):
+        os.makedirs(os.path.dirname(settings.records_file), exist_ok=True)
+        with open(settings.records_file, 'w', encoding='utf-8') as f:
+            json.dump([], f, ensure_ascii=False, indent=2)
+        log.info(f"Создан файл записей: {settings.records_file}")
 
 app = FastAPI(
     title="Email Processing API",
