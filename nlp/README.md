@@ -15,16 +15,15 @@ pip install -r requirements.txt
 
 python -m app.main
 
-  
+python -m app.email_worker
+
 
 # Настроение сообщения
 
 ```
-
-curl -X POST http://127.0.0.1:8000/sentiment \
-
--H "Content-Type: application/json" \
-
--d '{"text": "текст"}'
+http://0.0.0.0:8000/api/v1/health
+http://0.0.0.0:8000/api/v1/tickets
+http://0.0.0.0:8000/api/v1/tickets/{email_id}
+http://0.0.0.0:8000/api/v1/stats
 
 ```

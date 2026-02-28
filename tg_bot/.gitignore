@@ -9,6 +9,7 @@ env/
 .DS_Store
 logs/
 data/
+state/
 
 *.json
 

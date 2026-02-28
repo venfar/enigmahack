@@ -1,28 +1,21 @@
 import sys
 from loguru import logger
-from .config import settings
+from app.core.config import settings
 
 def setup_logger():
     logger.remove()
     logger.add(
         sys.stdout,
-        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan> - <level>{message}</level>",
         level=settings.log_level,
-        colorize=True
+        format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+        colorize=True,
     )
     logger.add(
-        "logs/email_{time:YYYY-MM-DD}.log",
-        rotation="500 MB",
+        "logs/app_{time:YYYY-MM-DD}.log",
+        rotation="00:00",
         retention="7 days",
         level="DEBUG",
-        format="{time} | {level} | {name}:{function}:{line} - {message}",
-    )
-    logger.add(
-        "logs/sentiment_{time:YYYY-MM-DD}.log",
-        rotation="500 MB",
-        retention="7 days",
-        level="DEBUG",
-        format="{time} | {level} | {name}:{function}:{line} - {message}"
+        format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
     )
     return logger
 
