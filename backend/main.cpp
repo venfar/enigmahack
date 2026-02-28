@@ -22,16 +22,17 @@ void log_to_mysql(const std::string& request_body, const std::string& status_msg
         con->setSchema("enigma_db");
         
         pstmt.reset(con->prepareStatement(
-            "INSERT INTO request_history(request_text, status) VALUES (?, ?)"
-            ));
+            "INSERT INTO request_history(user_id, request_text, status) VALUES (?, ?, ?)"
+        ));
         
-        pstmt->setString(1, request_body);
-        pstmt->setString(2, status_msg);
+        pstmt->setInt(1, 2); 
+        pstmt->setString(2, request_body);
+        pstmt->setString(3, status_msg);
         pstmt->execute();
         
         std::cout << "[DB] Log saved successfully" << std::endl;
     } catch (sql::SQLException &e) {
-        std::cerr << "[DB Error] " << e.what() << " (Code: " << e.getErrorCode() << ")" << std::endl;
+        std::cerr << "[DB Insert Error] " << e.what() << " (Code: " << e.getErrorCode() << ")" << std::endl;
     }
 }
 
@@ -48,35 +49,35 @@ int main() {
     server.Post("/api/v1/predict", [](const httplib::Request& req, httplib::Response& res) {
         try {
             auto input_data = json::parse(req.body);
-            std::cout << "Received request from client" << std::endl;
+            std::cout << "Received predict request" << std::endl;
             
             log_to_mysql(req.body, "success");
             
             json output_status = {
                 {"status", "success"},
-                {"prediction", nullptr},
+                {"prediction", "some_result"},
                 {"model-alpha", "1.0.0-alpha"}
             };
             
             res.set_content(output_status.dump(), "application/json");
         } catch (const std::exception& e) {
-            std::cerr << "JSON Error: " << e.what() << std::endl;
+            log_to_mysql(req.body, "error");
             res.status = 400;
-            res.set_content("{\"error\": \"Invalid JSON or processing error\"}", "application/json");
-        } catch (...) {
-            res.status = 500;
-            res.set_content("{\"error\": \"Unknown error\"}", "application/json");
+            res.set_content("{\"error\": \"Invalid JSON\"}", "application/json");
         }
     });
     
-        server.Get("/api", [](const httplib::Request& req, httplib::Response& res) {
+    server.Get("/api", [](const httplib::Request& req, httplib::Response& res) {
         try {
             sql::mysql::MySQL_Driver *driver = sql::mysql::get_mysql_driver_instance();
             std::unique_ptr<sql::Connection> con(driver->connect("tcp://db:3306", "root", "root"));
             con->setSchema("enigma_db");
 
             std::unique_ptr<sql::Statement> stmt(con->createStatement());
-            std::unique_ptr<sql::ResultSet> res_db(stmt->executeQuery("SELECT id, request_text, status FROM request_history LIMIT 10"));
+
+            std::unique_ptr<sql::ResultSet> res_db(stmt->executeQuery(
+                "SELECT id, request_text, status FROM request_history ORDER BY id DESC LIMIT 10"
+            ));
             
             json response_data = json::array();
             
@@ -89,18 +90,17 @@ int main() {
                 response_data.push_back(item);
             }
             
-            res.set_content(response_data.dump(), "application/json");
             res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_content(response_data.dump(), "application/json");
             
         } catch (sql::SQLException &e) {
             std::cerr << "[API DB Error] " << e.what() << std::endl;
             res.status = 500;
-            res.set_content("{\"error\": \"Database error\"}", "application/json");
+            res.set_content("{\"error\": \"Database connection error\"}", "application/json");
         }
     });
 
-    
-    std::cout << "Server is starting with port: 8080" << std::endl;
+    std::cout << "Server is starting at http://0.0.0.0:8080" << std::endl;
     server.listen("0.0.0.0", 8080);
     
     return 0;
