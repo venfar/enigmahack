@@ -8,18 +8,16 @@ services:
     depends_on:
       - backend
     networks:
-      - general
+      - general-network
 
   backend:
     build: ./backend
-    ports:
-      - "8080:8080"
     depends_on:
       - db
     env_file:
       - .env
     networks:
-      - general
+      - general-network
     restart: always
   
   db:
@@ -30,9 +28,19 @@ services:
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
-      - general
+      - general-network
+    restart: always
+  
+  app:
+    build: ./nlp
+    depends_on:
+      - db
+    env_file:
+      - ./nlp/.env.example
+    networks:
+      - general-network
     restart: always
 
 networks:
-  general:
+  general-network:
     driver: bridge

@@ -37,26 +37,6 @@ function App() {
             {Object.values(columnItem).map((rowItem) => (<td>{rowItem}</td>))}
           </tr>
         ))}
-        <tr>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-          <td>
-          </td>
-        </tr>
       </tbody>
     </table>
   )

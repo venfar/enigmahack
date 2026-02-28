@@ -1,4 +1,10 @@
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 dist/
+build/
+.npm
+.yarn
 .git
 *.log

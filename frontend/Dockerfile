@@ -4,24 +4,20 @@ WORKDIR /app
 
 COPY package*.json .
 
-RUN npm install
+RUN npm ci
 
 COPY . .
 
-RUN npm run build && ls -la
+RUN npm run build
 
 FROM nginx:alpine
 
-RUN adduser -D appuser
-
-COPY --from=builder --chown=appuser:appuser /app/dist /usr/share/nginx/html
+COPY --from=builder /app/dist /usr/share/nginx/html
 
 COPY ./nginx/nginx.conf /etc/nginx/conf.d/default.conf
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD wget --quiet --spider http://localhost:80/ || exit 1
-
-USER appuser
 
 EXPOSE 80
 
