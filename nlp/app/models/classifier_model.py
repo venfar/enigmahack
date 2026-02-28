@@ -1,7 +1,7 @@
 from transformers import pipeline
 from app.core.config import settings
 from app.core.logger import log
-from app.models.keywords.classifier_keyword import keywords
+from app.models.base.classifier_keyword import keywords
 
 class Classifier:
     def __init__(self):
@@ -70,7 +70,6 @@ class Classifier:
         2. Если keywords не дали уверенности — модель
         3. Возвращаем лучший результат
         """
-        # 1. Пробуем keywords
         kw_category, kw_score, kw_method = self._classify_by_keywords(text, subject)
         
         if kw_score >= 0.5:
@@ -81,10 +80,8 @@ class Classifier:
                 'method': 'keywords'
             }
         
-        # 3. Иначе используем модель
         model_category, model_score, model_method = self._classify_by_model(text, subject)
         
-        # 4. Выбираем лучший результат
         if model_score > kw_score:
             log.debug(f"Классификация по модели: {model_category} ({model_score:.2%})")
             return {

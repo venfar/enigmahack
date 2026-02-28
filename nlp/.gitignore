@@ -7,3 +7,9 @@ env/
 .vscode/
 .DS_Store
 logs/
+data/
+
+*.json
+
+test2.py
+test3.py

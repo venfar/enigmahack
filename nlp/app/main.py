@@ -67,7 +67,28 @@ async def analyze_sentiment(request: SentimentRequest):
             detail="Internal server error during prediction"
         )
 
-# Если нужно запускать напрямую (python app/main.py)
+'''@app.post("/category", response_model=SentimentResponse, tags=["category"])
+async def analyze_category(request: SentimentRequest):
+    if analyzer is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Model not loaded. Please try again later."
+        )
+    try:
+        result = analyzer.predict(request.text)
+        return SentimentResponse(
+            sentiment=result['sentiment'],
+            confidence=result['confidence'],
+            model_used=settings.model_name
+        )
+    except Exception as e:
+        log.error(f"Ошибка обработки запроса: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error during prediction"
+        )
+    '''
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
