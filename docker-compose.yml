@@ -12,8 +12,7 @@ services:
 
   backend:
     build: ./backend
-    restart: always 
-    ports: 
+    ports:
       - "8080:8080"
     depends_on:
       - db
@@ -21,6 +20,7 @@ services:
       - .env
     networks:
       - general-network
+    restart: always
   
   db:
     image: mysql:8.0
@@ -38,14 +38,10 @@ services:
       - general-network
     restart: always
   
-  # nlp:
+  # app:
   #   build: ./nlp
-  #   expose:
-  #     - "8000" 
   #   depends_on:
   #     - db
-  #   environment:
-  #     - DATABASE_URL=mysql+pymysql://root:${DB_PASS}@db:3306/${DB_NAME}?charset=utf8mb4
   #   env_file:
   #     - ./nlp/.env.example
   #   networks:
