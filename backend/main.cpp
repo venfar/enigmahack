@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <memory>
+#include <thread>
+#include <chrono>
 #include "httplib.h"
 #include <nlohmann/json.hpp>
 #include <mysql_driver.h>
@@ -12,19 +14,26 @@
 using json = nlohmann::json;
 
 std::unique_ptr<sql::Connection> connect_db() {
-    try {
-        sql::mysql::MySQL_Driver *driver = sql::mysql::get_mysql_driver_instance();
-        std::unique_ptr<sql::Connection> con(driver->connect("tcp://db:3306", "root", "root"));
-        con->setSchema("enigma_db");
-        
-        std::unique_ptr<sql::Statement> stmt(con->createStatement());
-        stmt->execute("SET NAMES utf8mb4");
-        
-        return con;
-    } catch (sql::SQLException &e) {
-        std::cerr << "[DB Connection Error] " << e.what() << std::endl;
-        return nullptr;
+    sql::mysql::MySQL_Driver *driver = sql::mysql::get_mysql_driver_instance();
+    int attempts = 0;
+    
+    while (attempts < 20) {
+        try {
+            std::unique_ptr<sql::Connection> con(driver->connect("tcp://db:3306", "root", "root"));
+            con->setSchema("enigma_db");
+            
+            std::unique_ptr<sql::Statement> stmt(con->createStatement());
+            stmt->execute("SET NAMES utf8mb4");
+            
+            std::cout << "[DB] Connected successfully!" << std::endl;
+            return con; 
+        } catch (sql::SQLException &e) {
+            attempts++;
+            std::cerr << "[DB] Connection failed (attempt " << attempts << "/20). Error: " << e.what() << std::endl;
+            std::this_thread::sleep_for(std::chrono::seconds(3)); 
+        }
     }
+    return nullptr; 
 }
 
 void log_ticket_to_db(const std::string& subject, const std::string& body, const std::string& sentiment, int category_id = 1) {
@@ -49,13 +58,16 @@ void log_ticket_to_db(const std::string& subject, const std::string& body, const
 
 int main() {
     httplib::Server server;
-    
     server.set_mount_point("/", "./frontend");
 
     server.Get("/api", [](const httplib::Request& req, httplib::Response& res) {
         try {
             auto con = connect_db(); 
-            if (!con) throw std::runtime_error("Database connection failed");
+            if (!con) {
+                res.status = 500;
+                res.set_content("{\"error\": \"Database not ready\"}", "application/json");
+                return;
+            }
 
             std::unique_ptr<sql::Statement> stmt(con->createStatement());
             
@@ -91,7 +103,7 @@ int main() {
         } catch (const std::exception &e) {
             std::cerr << "[API Error] " << e.what() << std::endl;
             res.status = 500;
-            res.set_content("{\"error\": \"Database error\"}", "application/json; charset=utf-8");
+            res.set_content("{\"error\": \"Internal server error\"}", "application/json");
         }
     });
 
@@ -99,26 +111,22 @@ int main() {
         try {
             auto input_data = json::parse(req.body);
             std::string text = input_data.value("text", "");
-            
             std::string sentiment = input_data.value("sentiment", "neutral");
             int category_id = input_data.value("category_id", 1);
             std::string subject = input_data.value("subject", "Новое обращение");
             
             log_ticket_to_db(subject, text, sentiment, category_id);
             
-            json output = {
-                {"status", "success"}, 
-                {"message", "Ticket created and categorized"}
-            };
+            json output = {{"status", "success"}, {"message", "Processed"}};
             res.set_header("Access-Control-Allow-Origin", "*");
-            res.set_content(output.dump(), "application/json; charset=utf-8");
+            res.set_content(output.dump(), "application/json");
         } catch (...) {
             res.status = 400;
-            res.set_content("{\"error\": \"Invalid input\"}", "application/json");
+            res.set_content("{\"error\": \"Invalid JSON\"}", "application/json");
         }
     });
 
-    std::cout << "Server is starting with port: 8080" << std::endl;
+    std::cout << "Backend is running on http://0.0.0.0:8080" << std::endl;
     server.listen("0.0.0.0", 8080);
     
     return 0;
