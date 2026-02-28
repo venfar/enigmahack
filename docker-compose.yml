@@ -10,22 +10,18 @@ services:
     depends_on:
       - frontend
       - backend
-      - nlp
+      # - nlp
     networks:
       - general-network
     restart: always
 
   frontend:
     build: ./frontend
-    expose:
-      - "80"
     networks:
       - general-network
 
   backend:
     build: ./backend
-    expose:
-      - "8080"
     depends_on:
       - db
     restart: always
@@ -50,19 +46,19 @@ services:
       - general-network
     restart: always
   
-  nlp:
-    build: ./nlp
-    expose:
-      - "8000" 
-    depends_on:
-      - db
-    environment:
-      - DATABASE_URL=mysql+pymysql://root:${DB_PASS}@db:3306/${DB_NAME}?charset=utf8mb4
-    env_file:
-      - ./nlp/.env.example
-    networks:
-      - general-network
-    restart: always
+  # nlp:
+  #   build: ./nlp
+  #   expose:
+  #     - "8000" 
+  #   depends_on:
+  #     - db
+  #   environment:
+  #     - DATABASE_URL=mysql+pymysql://root:${DB_PASS}@db:3306/${DB_NAME}?charset=utf8mb4
+  #   env_file:
+  #     - ./nlp/.env.example
+  #   networks:
+  #     - general-network
+  #   restart: always
 
 networks:
   general-network:
