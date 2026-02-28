@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pathlib import Path
 from pydantic import Field
 
 class Settings(BaseSettings):
@@ -24,6 +25,8 @@ class Settings(BaseSettings):
 
     # === Логи ===
     log_level: str = Field("INFO")
+
+    records_file: Path = Path(__file__).parent.parent.parent / "data" / "records.json"
 
     # === Интервалы ===
     poll_interval: int = Field(60)

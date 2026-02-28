@@ -108,9 +108,9 @@ class ResponseGenerator:
     
     def _generate_fallback(self, record) -> str:
         """Fallback генерация на основе контекста (без LLM)"""
-        fio = record.fio or "Клиент"
-        category = record.category or "вопрос"
-        description = record.description or "вашему вопросу"
+        fio = record.get('fio') or "Клиент"
+        category = record.get('category') or "вопрос"
+        description = record.get('description') or "вашему вопросу"
         
         response = f"""Уважаемый(ая) {fio}!
 
@@ -155,19 +155,20 @@ class ResponseGenerator:
     
     def generate(self, record) -> dict:
         log.info("Генерация ответа (LLM Qwen)...")
-        
-        context = self._build_context(record.category or "другое")
+    
+        category = record.get('category') or "другое"
+        context = self._build_context(category)
         
         prompt = GENERATION_PROMPT.format(
             context=context,
-            fio=record.fio or "Клиент",
-            object_name=record.object_name or "не указано",
-            phone=record.phone or "не указан",
-            email=record.email or "не указан",
-            device_type=record.device_type or "прибор ЭРИС",
-            category=record.category or "вопрос",
-            sentiment=record.sentiment or "neutral",
-            description=record.description or "вопрос"
+            fio=record.get('fio') or "Клиент",
+            object_name=record.get('object_name') or "не указано",
+            phone=record.get('phone') or "не указан",
+            email=record.get('email') or "не указан",
+            device_type=record.get('device_type') or "прибор ЭРИС",
+            category=category,
+            sentiment=record.get('sentiment') or "neutral",
+            description=record.get('description') or "вопрос"
         )
         
         generated_response = None
@@ -185,14 +186,14 @@ class ResponseGenerator:
             generated_response = self._generate_fallback(record)
             method = "fallback"
         
-        subject = f"RE: {getattr(record, 'email_id', 'Обращение')} | {record.category or 'Вопрос'}"
+        subject = f"RE: {getattr(record, 'email_id', 'Обращение')} | {record.get('category') or 'Вопрос'}"
         
         log.success(f"Ответ сгенерирован (метод: {method})")
         
         return {
             'subject': subject,
             'body': generated_response,
-            'category': record.category or "другое",
+            'category': record.get('category') or "другое",
             'method': method,
             'generated_at': datetime.now().isoformat(),
         }

@@ -13,6 +13,7 @@ from app.models.sentiment_model import SentimentAnalyzer
 from app.models.classifier_model import Classifier
 from app.models.summarizer_model import SummarizerModel
 from app.services.parser import Parser
+from app.models.response_generator import ResponseGenerator
 
 
 class EmailWorker:    
@@ -31,6 +32,7 @@ class EmailWorker:
         self.classifier = Classifier()
         self.summarizer = SummarizerModel()
         self.parser = Parser()
+        self.response_generator = ResponseGenerator()
         log.success("Все модели загружены")
     
     def _load_processed_ids(self) -> set:
@@ -105,7 +107,6 @@ class EmailWorker:
                 content_type = part.get_content_type()
                 content_disposition = str(part.get("Content-Disposition"))
                 
-                # Пропускаем вложения
                 if "attachment" in content_disposition:
                     continue
                 
@@ -201,6 +202,12 @@ class EmailWorker:
         self._save_processed_ids()
         
         log.success(f"Письмо #{email_id} успешно обработано")
+
+        log.info("Генерация ответа...")
+        response = self.response_generator.generate(record)
+        record['response_body'] = response['body']
+        record['response_subject'] = response['subject']
+        record['response_method'] = response['method']
         
         return record
     
@@ -274,11 +281,8 @@ class EmailWorker:
                 if not records:
                     log.debug(f"Нет новых писем, ждем {poll_interval} сек...")
                 else:
-                    # TODO: Сохранение в PostgreSQL
-                    # TODO: Отправка ответа через SMTP
-                    # TODO: Уведомление в Telegram
-                    print(records)
-                    pass
+                    # Сохранение в общее хранилище для API
+                    self._save_to_api_storage(records)
                 
                 for i in range(poll_interval):
                     asyncio.run(asyncio.sleep(1))
@@ -289,6 +293,26 @@ class EmailWorker:
             except Exception as e:
                 log.error(f"Критическая ошибка: {e}")
                 asyncio.run(asyncio.sleep(10))
+    
+    def _save_to_api_storage(self, records: list):
+        """Сохранение записей в хранилище для API"""
+        storage_file = "data/processed_records.json"
+        
+        existing = []
+        if os.path.exists(storage_file):
+            try:
+                with open(storage_file, 'r', encoding='utf-8') as f:
+                    existing = json.load(f)
+            except:
+                existing = []
+        
+        existing.extend(records)
+        
+        os.makedirs(os.path.dirname(storage_file), exist_ok=True)
+        with open(storage_file, 'w', encoding='utf-8') as f:
+            json.dump(existing, f, ensure_ascii=False, indent=2)
+        
+        log.success(f"Сохранено {len(records)} записей в API хранилище")
 
 
 # ============================================================================

@@ -47,7 +47,6 @@ class Classifier:
         return best_category, best_score, "keywords"
 
     def _classify_by_model(self, text: str, subject: str = "") -> tuple:
-        """Классификация через zero-shot модель"""
         if not self.pipeline:
             return "другое", 0.2, "fallback"
         

@@ -15,7 +15,8 @@ pip install -r requirements.txt
 
 python -m app.main
 
-  
+python -m app.email_worker
+
 
 # Настроение сообщения
 

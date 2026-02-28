@@ -13,7 +13,7 @@ from app.models.base.products import (
 class Parser:
     def __init__(self):
         log.info("Parser инициализирован")
-        log.success(f"Загружено {len(ALL_PRODUCTS)} моделей ЭРИС")
+        log.success(f"Загружено {len(ALL_PRODUCTS)} моделей")
     
     def find_device_models(self, text: str, subject: str = "") -> List[Dict]:
         """
@@ -28,10 +28,8 @@ class Parser:
         combined = (subject + " " + text).upper()
         found_models = []
         
-        # Поиск по полному названию
         for model in ALL_PRODUCTS:
             if model.upper() in combined:
-                # Определяем категорию
                 category = self._get_category(model)
                 found_models.append({
                     'model': model,
@@ -40,7 +38,6 @@ class Parser:
                 })
                 log.debug(f"Найдена модель: {model} ({category})")
         
-        # Поиск по синонимам
         for model, synonyms in PRODUCT_SYNONYMS.items():
             for synonym in synonyms:
                 if synonym.upper() in combined:
@@ -81,7 +78,7 @@ class Parser:
                 number = re.sub(r'[^0-9a-fA-F]', '', match)
                 if number and number not in found_numbers:
                     found_numbers.append(number)
-                    log.debug(f"🔍 Найден серийный номер: {number}")
+                    log.debug(f"Найден серийный номер: {number}")
         
         return found_numbers
     
