@@ -27,20 +27,24 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASS}
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
     networks:
       - general-network
     restart: always
   
-  app:
-    build: ./nlp
-    depends_on:
-      - db
-    env_file:
-      - ./nlp/.env.example
-    networks:
-      - general-network
-    restart: always
+  # app:
+  #   build: ./nlp
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - ./nlp/.env.example
+  #   networks:
+  #     - general-network
+  #   restart: always
 
 networks:
   general-network:
     driver: bridge
+
+volumes:
+  mysql_data:
