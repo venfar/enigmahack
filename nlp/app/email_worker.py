@@ -177,13 +177,14 @@ class EmailWorker:
         record = {
             'email_id': email_id,
             'date': date,
+            'text': text,
             'fio': parser_result['fio'] or sender_name,
             'object_name': parser_result['object_name'],
             'phone': parser_result['phones'][0] if parser_result['phones'] else None,
             'email': parser_result['emails'][0] if parser_result['emails'] else sender_email,
             'serial_numbers': parser_result['serial_numbers'],
             'device_type': parser_result['device_types'][0] if parser_result['device_types'] else None,
-            'description': summarizer_result['summary'],
+            'summary': summarizer_result['summary'],
             'sentiment': sentiment_result['sentiment'],
             'sentiment_confidence': sentiment_result['confidence'],
             'category': classifier_result['category'],
@@ -296,7 +297,7 @@ class EmailWorker:
     
     def _save_to_api_storage(self, records: list):
         """Сохранение записей в хранилище для API"""
-        storage_file = "data/processed_records.json"
+        storage_file = "data/records.json"
         
         existing = []
         if os.path.exists(storage_file):
