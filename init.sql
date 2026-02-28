@@ -1,29 +1,45 @@
-CREATE TABLE users (
+
+CREATE TABLE Facility (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE request_history (
+CREATE TABLE Contacts (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INTEGER,
-    request_text TEXT NOT NULL,
-    response_text TEXT,
-    status VARCHAR(20),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    full_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    phone VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-INSERT INTO users (username) VALUES 
-('pro'),
-('enigma_bot'),
-('student'),
-('user');
+CREATE TABLE Categories (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT
+);
 
-INSERT INTO request_history (user_id, request_text, response_text, status) VALUES
-(1, 'Ubuntu', 'nginx', 'success'),
-(1, 'Прокси', 'Сервер', 'success'),
-(2, 'Сложный пароль', 'hK9!pL2_sA01x', 'success'),
-(3, 'БД?', 'Тест', 'error'),
-(4, 'Логи!', 'Генерация', 'success');
+CREATE TABLE ticket (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    subject VARCHAR(255),
+    body TEXT,
+    facility_id INT,
+    contact_id INT,
+    sentiment VARCHAR(50),
+    category_id INT,
+    generated_response TEXT,
+    status VARCHAR(50),
+    received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (facility_id) REFERENCES Facility(id),
+    FOREIGN KEY (contact_id) REFERENCES Contacts(id),
+    FOREIGN KEY (category_id) REFERENCES Categories(id)
+);
 
+INSERT INTO Facility (name) VALUES ('Объект Альфа'), ('Цех №2');
+INSERT INTO Contacts (full_name, email) VALUES ('Иван Иванов', 'ivan@test.ru');
+INSERT INTO Categories (name, description) VALUES ('Техническое', 'Проблемы с оборудованием');
+
+INSERT INTO ticket (subject, body, facility_id, contact_id, sentiment, category_id, status) 
+VALUES ('Утечка газа', 'Зафиксировано превышение нормы CH4', 1, 1, 'negative', 1, 'open');
