@@ -5,7 +5,7 @@ from app.core.logger import log
 
 class SentimentAnalyzer:
     def __init__(self):
-        self.model_name = settings.model_name
+        self.model_name = settings.sentiment_name
         self.device = settings.device
         self.max_length = settings.max_length
         self.pipeline = None
@@ -18,7 +18,7 @@ class SentimentAnalyzer:
                 "sentiment-analysis",
                 model=self.model_name,
                 tokenizer=self.model_name,
-                device=self.device if self.device == "cuda" else -1,
+                device=-1 if self.device == "cpu" else 0,
                 max_length=self.max_length,
                 truncation=True
             )
@@ -27,11 +27,12 @@ class SentimentAnalyzer:
             log.error(f"Ошибка загрузки модели: {e}")
             raise RuntimeError(f"Не удалось загрузить модель: {e}")
 
-    def predict(self, text: str) -> dict:
+    def predict(self, text: str, subject: str = "") -> dict:
         if not self.pipeline:
             raise RuntimeError("Модель не загружена")
         try:
-            result = self.pipeline(text[:self.max_length])[0]
+            input_text = f"{subject} {text}"
+            result = self.pipeline(input_text[:self.max_length])[0]
             label = result['label']
             score = result['score']
 
@@ -53,5 +54,5 @@ class SentimentAnalyzer:
             log.error(f"Ошибка при предсказании: {e}")
             raise
 
-    def __call__(self, text: str) -> dict:
-        return self.predict(text)
+    def __call__(self, text: str, subject: str = "") -> dict:
+        return self.predict(text, subject)

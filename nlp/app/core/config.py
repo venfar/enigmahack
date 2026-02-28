@@ -8,7 +8,10 @@ class Settings(BaseSettings):
     imap_port: int = Field(993)
     email_folder: str = Field("INBOX")
 
-    model_name: str = Field(
+    classifier_name: str = Field(
+        "cointegrated/rubert-base-cased-nli-threeway"
+    )
+    sentiment_name: str = Field(
         "blanchefort/rubert-base-cased-sentiment"
     )
     device: str = Field("cpu")
