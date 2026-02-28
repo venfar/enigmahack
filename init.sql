@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS Gas_analyzer (
     FOREIGN KEY (type_id) REFERENCES Gas_analyzer_type(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+
 CREATE TABLE IF NOT EXISTS ticket (
     id INT AUTO_INCREMENT PRIMARY KEY,
     email_id VARCHAR(100),
