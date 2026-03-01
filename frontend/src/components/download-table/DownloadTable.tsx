@@ -1,3 +1,4 @@
+import './DownloadTable.css';
 import type { Data } from '../../types.ts';
 
 type DownloadTableProps = {
