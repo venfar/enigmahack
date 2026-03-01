@@ -23,8 +23,8 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_ROOT_PASSWORD: ${DB_PASS}
+      - MYSQL_DATABASE: ${DB_NAME}
+      - MYSQL_ROOT_PASSWORD: ${DB_PASS}
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - mysql_data:/var/lib/mysql
@@ -46,6 +46,9 @@ services:
     build: ./nlp
     env_file:
       - .env
+    environment:
+      - HOST: ${NLP_HOST}
+      - PORT: ${NLP_PORT}
     depends_on:
       - db
     networks:
