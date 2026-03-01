@@ -32,7 +32,6 @@ services:
       - general-network
     restart: always
 
-  # Email Worker
  email_worker:
    build: ./nlp
    env_file: ./nlp/.env
@@ -43,7 +42,6 @@ services:
    command: python app/email_worker.py
    restart: unless-stopped
 
-  # NLP API
  nlp_api:
    build: ./nlp
    env_file: ./nlp/.env
@@ -53,7 +51,6 @@ services:
      - general-network
    restart: unless-stopped
 
-  # Telegram Bot
  tg_bot:
    build: ./tg_bot
    env_file: ./tg_bot/.env
