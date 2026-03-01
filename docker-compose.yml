@@ -33,7 +33,7 @@ services:
     restart: always
 
   # Email Worker
- email_worker:
+  email_worker:
    build: ./nlp
    env_file: ./nlp/.env
    depends_on:
@@ -44,7 +44,7 @@ services:
    restart: unless-stopped
 
   # NLP API
- nlp_api:
+  nlp_api:
    build: ./nlp
    env_file: ./nlp/.env
    depends_on:
@@ -54,7 +54,7 @@ services:
    restart: unless-stopped
 
   # Telegram Bot
- tg_bot:
+  tg_bot:
    build: ./tg_bot
    env_file: ./tg_bot/.env
    depends_on:

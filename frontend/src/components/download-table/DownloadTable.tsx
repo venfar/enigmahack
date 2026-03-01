@@ -47,7 +47,7 @@ function DownloadTable(props: DownloadTableProps) {
   }
 
   return (
-    <button onClick={downloadCSV}>
+    <button className='download-btn' onClick={downloadCSV}>
       Скачать
     </button>
   )
