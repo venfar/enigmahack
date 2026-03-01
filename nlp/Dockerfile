@@ -27,6 +27,6 @@ ENV PATH="/venv/bin:$PATH"
 
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8001
 
 CMD ["python", "app/main.py"]
