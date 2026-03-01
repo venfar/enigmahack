@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from pathlib import Path
 from pydantic import Field
+from typing import Optional
 
 class Settings(BaseSettings):
     # === Почтовые настройки ===
@@ -11,6 +12,15 @@ class Settings(BaseSettings):
     smtp_server: str = Field("smtp.yandex.ru")
     smtp_port: int = Field(587)
     email_folder: str = Field("INBOX")
+
+    # Настройки SSL для SMTP
+    smtp_use_tls: bool = True
+    smtp_ssl_verify: bool = True          # False — только для внутренних серверов!
+    smtp_ssl_ca_cert: Optional[str] = None  # Путь к CA-сертификату
+    
+    # Отправитель
+    from_email: str = "support@eriskip.ru"
+    from_name: str = "Техподдержка ООО «ЭРИС»"
 
     # === Модели ===
     classifier_name: str = Field("cointegrated/rubert-base-cased-nli-threeway")
@@ -33,6 +43,13 @@ class Settings(BaseSettings):
     # === Интервалы ===
     poll_interval: int = Field(60)
     processed_file: str = Field("processed_emails.json")
+
+    # === MySQL Database ===
+    db_host: str = Field("db")
+    db_port: int = Field(3306)
+    db_user: str = Field("root")
+    db_pass: str = Field("root")
+    db_name: str = Field("enigma_db")
 
     class Config:
         env_file = ".env"

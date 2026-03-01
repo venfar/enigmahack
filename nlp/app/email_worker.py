@@ -44,7 +44,11 @@ class EmailWorker:
             smtp_port=self.smtp_port,
             login=settings.email_user,
             password=self.email_password,
-            from_name="Техподдержка ЭРИС"
+            from_name="Техподдержка ЭРИС",
+
+            use_tls=settings.smtp_use_tls,
+            ssl_verify=settings.smtp_ssl_verify,
+            ssl_ca_cert=settings.smtp_ssl_ca_cert
         )   
     
     def _load_processed_ids(self) -> set:
@@ -222,6 +226,9 @@ class EmailWorker:
         record['response_subject'] = response['subject']
         record['response_method'] = response['method']
 
+        from app.services.database_writer import DatabaseWriter
+        DatabaseWriter.save_ticket(record)  
+        
         log.info("Отправка письма...")
         success = self.sender.send(
             to_email=record['email'],

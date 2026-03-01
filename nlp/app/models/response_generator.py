@@ -17,11 +17,12 @@ class ResponseGenerator:
     
     # Жёсткие настройки для детерминированной генерации
     LLM_CONFIG = {
-        "temperature": 0.05,        # Минимум "творчества"
+        "temperature": 0.2,        # Минимум "творчества"
         "top_p": 0.9,
+        "top_k": 50, 
         "repetition_penalty": 1.25, # Агрессивное подавление повторов
         "max_new_tokens": 400,      # Ограничение длины
-        "do_sample": False,         # Greedy decoding для стабильности
+        "do_sample": True,         # Greedy decoding для стабильности
         "num_return_sequences": 1,
         "eos_token_id": [0, 2],     # Стоп-токены
     }
