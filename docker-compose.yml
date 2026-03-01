@@ -33,39 +33,35 @@ services:
     restart: always
 
   # Email Worker
-#  email_worker:
-#    build: ./nlp
-#    env_file: ./nlp/.env
-#    depends_on:
-#      - db
-#    networks:
-#      - general-network
-#    command: python app/email_worker.py
-#    restart: unless-stopped
+ email_worker:
+   build: ./nlp
+   env_file: ./nlp/.env
+   depends_on:
+     - db
+   networks:
+     - general-network
+   command: python app/email_worker.py
+   restart: unless-stopped
 
   # NLP API
-#  nlp_api:
-#    build: ./nlp
-#    env_file: ./nlp/.env
-#    depends_on:
-#      - db
-#    networks:
-#      - general-network
-#    ports:
-#      - "8001:8001"
-#    command: python app/main.py
-#    restart: unless-stopped
+ nlp_api:
+   build: ./nlp
+   env_file: ./nlp/.env
+   depends_on:
+     - db
+   networks:
+     - general-network
+   restart: unless-stopped
 
   # Telegram Bot
-#  tg_bot:
-#    build: ./tg_bot
-#    env_file: ./tg_bot/.env
-#    depends_on:
-#      - nlp_api
-#    networks:
-#      - general-network
-#    command: python bot.py
-#    restart: unless-stopped
+ tg_bot:
+   build: ./tg_bot
+   env_file: ./tg_bot/.env
+   depends_on:
+     - nlp_api
+   networks:
+     - general-network
+   restart: unless-stopped
 
 networks:
   general-network:
