@@ -44,7 +44,8 @@ services:
 
   nlp_api:
     build: ./nlp
-    env_file: ./nlp/.env
+    env_file:
+      - .env
     depends_on:
       - db
     networks:
@@ -53,7 +54,8 @@ services:
 
   tg_bot:
     build: ./tg_bot
-    env_file: ./tg_bot/.env
+    env_file:
+      - .env
     depends_on:
       - nlp_api
     networks:
