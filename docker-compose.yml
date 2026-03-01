@@ -34,7 +34,8 @@ services:
 
   email_worker:
     build: ./nlp
-    env_file: ./nlp/.env
+    env_file:
+      - .env
     depends_on:
       - db
     networks:
