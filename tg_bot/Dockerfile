@@ -27,4 +27,4 @@ ENV PATH="/venv/bin:$PATH"
 
 USER appuser
 
-CMD ["python", "app/bot.py"]
+CMD ["python", "bot.py"]
